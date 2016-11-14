@@ -1,0 +1,77 @@
+---
+title: "Regression Project"
+author: "Junyang Liu"
+date: "11/5/2016"
+output: pdf_document
+---
+#Regression Methods Project: Effects of Automatic and Manual Transmission on MPG of Cars
+
+##Executive Summary:
+This is a course project from Coursera, offered by Johns Hopkins University.
+In this report, we will investigate a data set(`mtcars`) from `MASS` package and address the following questions:
+       1. Is an automatic or manual transmission better for MPG?
+       2. Quantify the MPG difference between automatic and manual transmissions.
+This analysis discovers that there is a significant difference in MPG between automatic transmission and manual transmission. from the model we pick, with everything holding fixed,by switching from automatic transmission to manual transmission, the MPG on average is going to increase 1.80921 units.
+
+##Getting and Cleaning&Transforming the data
+First, we load the data from `MASS` package and change the class of some variables to factors. 
+```{r}
+library(MASS)
+cars<-mtcars
+cars$am<-factor(cars$am, labels = c("Auto", "Manual"))
+cars$vs<-factor(cars$vs)
+cars$cyl<-factor(cars$cyl)
+cars$carb<-factor(cars$carb)
+cars$gear<-factor(cars$gear)
+```
+##Exploratory Data analysis
+From the plot, we can see that `cyl`, `hp`,`wt`, and `am` are target variables.
+to varify that, I uesed a `step` function to confirm.
+```{r}
+fullmodel<-lm(mpg~.,data = cars)
+```
+```{r, eval=FALSE}
+summary(step(fullmodel,direction = "both"))
+```
+```{r}
+bestmodel<- lm(mpg ~ cyl + hp + wt + am,data = cars)
+summary(bestmodel)
+```
+From the summary, we can see that the Residual standard error: 2.41 on 26 degrees of freedom,
+the Adjusted R^2 is 0.84, meaning that about 84% of the error is explained through the regression.
+`mpg` will decrease by 2.49683 units for every 1000 lb increase in `wt`, while hoding other predictors fixed.
+`mpg` decreases 0.03211 units for every `hp` increase, while hoding other predictors fixed.in this cass, this is negligible.
+`mpg` decreases 3.03134 units if `cyl` increase from 4 to 6,while hoding other predictors fixed.
+`mpg` decreases 2.16368 units if `cyl` increase from 6 to 8,while hoding other predictors fixed.
+`mpg` increases 1.80921 units if `am` increase from auto to manual, while hoding other predictors fixed.
+
+##Model Analysis
+now we have our theoretical `bestmodel`. We need to verify that if the predictors in this model is indeed significant enough to be included. I used `mpg` against `am` as a base model.and used `anova` test to test its significance.
+```{r}
+basemodel<-lm(mpg ~ am, data = cars)
+anova(fullmodel,basemodel)
+```
+From the the anova summary, the every low P-value suggests taht we reject the null hypothesis that `cyl`, `hp`, and `wt` are not significant contributors to the `bestmodel`. Therefore, our `bestmodel` have all the significant contributors.
+
+##Residual Control
+Now, we need to check if the residuals is constant, normally distributed,and wether it has large outliers. 
+From the Q-Q plot(in Figure3) we see that the residuals are approximately normal becasue they are close to a line. Residuals are approximately constant, because from the Fitted.value vs Residual plot,I did not see an obvicious pattern. and the Scale-Location plot confirms it is contant variance, and randomly distributed. Lastly, the Leverage-Residuals plot shows that there is no extreme outliers since all the points lies in the 0.5 bands line.
+
+
+##Appendix:Plots and Figures
+```{r,echo=FALSE}
+boxplot(mpg ~ am, data = cars, col = c("red", "blue"),
+        xlab = "Transmission", ylab = "MPG",
+        main = "Figure 1, Car MPG by Transmission type")
+```
+
+
+```{r,echo=FALSE}
+pairs(mpg ~ ., data = cars, main = "Figure 2")
+```
+
+
+```{r,echo=FALSE}
+par(mfrow = c(2,2))
+plot(bestmodel,main = "Figure 3")
+```
